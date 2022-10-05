@@ -1,0 +1,50 @@
+version: "3.9"
+services:
+  app:
+    image: sio-app:latest
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+    networks:
+      - mon_super_network
+
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - 8102:80
+    volumes:
+      - ./:/var/www
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      - mon_super_network
+
+  ma_super_db:
+    image: mariadb:latest
+    #command: --max_allowed_packet=325058560000
+    restart: always
+    environment:
+      MARIADB_DATABASE: laravel
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_PASSWORD: laravel
+      MARIADB_USER: laravel
+    networks:
+      - mon_super_network
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      PMA_HOST: ma_super_db
+      PMA_PORT: 3306
+    ports:
+      - 8100:80
+    networks:
+      - mon_super_network
+
+networks:
+  mon_super_network:
+    driver: bridge
